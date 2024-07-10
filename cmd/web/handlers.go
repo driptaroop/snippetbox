@@ -3,12 +3,17 @@ package main
 import (
 	"fmt"
 	"html/template" // New import
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
+	// logging
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	logger.Info("in home", "method", "GET", "path", "/")
+
 	w.Header().Add("Server", "Go")
 
 	files := []string{
@@ -19,13 +24,13 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		log.Println(err.Error())
+		logger.Info(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 
 	err = ts.ExecuteTemplate(w, "base", nil)
 	if err != nil {
-		log.Println(err.Error())
+		logger.Info(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 
