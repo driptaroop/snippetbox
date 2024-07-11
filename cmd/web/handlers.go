@@ -3,16 +3,12 @@ package main
 import (
 	"fmt"
 	"html/template" // New import
-	"log/slog"
 	"net/http"
-	"os"
 	"strconv"
 )
 
-func home(w http.ResponseWriter, r *http.Request) {
-	// logging
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	logger.Info("in home", "method", "GET", "path", "/")
+func (app *Application) home(w http.ResponseWriter, r *http.Request) {
+	app.logger.Info("in home", "method", "GET", "path", "/")
 
 	w.Header().Add("Server", "Go")
 
@@ -24,20 +20,19 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		logger.Info(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
+		return
 	}
 
 	err = ts.ExecuteTemplate(w, "base", nil)
 	if err != nil {
-		logger.Info(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 	}
 
 	w.Write([]byte("Hello from Snippetbox"))
 }
 
-func snippetView(w http.ResponseWriter, r *http.Request) {
+func (app *Application) snippetView(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil || id < 1 {
 		http.NotFound(w, r)
@@ -46,11 +41,11 @@ func snippetView(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
 }
 
-func snippetCreate(w http.ResponseWriter, r *http.Request) {
+func (app *Application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Display a form for creating a new snippet..."))
 }
 
-func snippetCreatePost(w http.ResponseWriter, r *http.Request) {
+func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Save a new snippet..."))
 }

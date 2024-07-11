@@ -1,41 +1,56 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
-	"log"
+	_ "github.com/go-sql-driver/mysql"
 	"log/slog"
 	"net/http"
 	"os"
 )
 
-type config struct {
-	addr      string
-	staticDir string
-}
-
 func main() {
-	// logging
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		AddSource: true,
-	}))
+	application := &Application{
+		logger: slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			AddSource: true,
+		})),
+		config: &Config{},
+	}
 
-	var cfg config
-
-	flag.StringVar(&cfg.addr, "addr", ":4000", "HTTP network address")
-	flag.StringVar(&cfg.staticDir, "staticDir", "./ui/static/", "static directory")
+	flag.StringVar(&application.config.addr, "addr", ":4000", "HTTP network address")
+	flag.StringVar(&application.config.staticDir, "staticDir", "./ui/static/", "static directory")
+	flag.StringVar(&application.config.dsn, "dsn", "web:password@/snippetbox?parseTime=true", "Mysql data source name")
 	flag.Parse()
 
-	fileServer := http.FileServer(http.Dir(cfg.staticDir))
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /{$}", home)
-	mux.HandleFunc("GET /snippet/view/{id}", snippetView)
-	mux.HandleFunc("GET /snippet/create", snippetCreate)
-	mux.HandleFunc("POST /snippet/create", snippetCreatePost)
-	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
+	db, err := openDB(application.config.dsn)
+	if err != nil {
+		application.logger.Error(err.Error())
+		os.Exit(1)
+	}
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			application.logger.Error(err.Error())
+		}
+	}(db)
 
-	logger.Info(fmt.Sprintf("starting server on %s", cfg.addr))
+	application.logger.Info(fmt.Sprintf("starting server on %s", application.config.addr))
 
-	err := http.ListenAndServe(cfg.addr, mux)
-	log.Fatal(err)
+	err = http.ListenAndServe(application.config.addr, application.routes())
+	application.logger.Error(err.Error())
+}
+
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	return db, nil
 }

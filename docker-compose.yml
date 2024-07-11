@@ -1,0 +1,14 @@
+services:
+  db:
+    image: mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_USER: web
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: snippetbox
+      MYSQL_ROOT_PASSWORD: example
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    # (this is just an example, not intended to be a production configuration)
