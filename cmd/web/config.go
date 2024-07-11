@@ -1,14 +1,11 @@
 package main
 
-import "log/slog"
+import (
+	"log/slog"
+	"snippetbox.dripto.org/internal/models"
+)
 
 type Application struct {
-	logger *slog.Logger
-	config *Config
-}
-
-type Config struct {
-	addr      string
-	staticDir string
-	dsn       string
+	logger   *slog.Logger
+	snippets *models.SnippetModel
 }
