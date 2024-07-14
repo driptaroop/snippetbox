@@ -43,12 +43,20 @@ func main() {
 		}
 	}(db)
 
+	//init template cache
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
 	// common config
 	application := &Application{
 		logger: logger,
 		snippets: &models.SnippetModel{
 			DB: db,
 		},
+		templateCache: templateCache,
 	}
 
 	// server start
