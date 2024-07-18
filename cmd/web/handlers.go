@@ -11,8 +11,6 @@ import (
 func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 	app.logger.Info("in home", "method", "GET", "path", "/")
 
-	w.Header().Add("Server", "Go")
-
 	snippets, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(w, r, err)
