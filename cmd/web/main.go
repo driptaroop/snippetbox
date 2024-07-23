@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"log/slog"
 	"net/http"
@@ -50,6 +51,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Initialize a decoder instance...
+	formDecoder := form.NewDecoder()
+
 	// common config
 	application := &Application{
 		logger: logger,
@@ -57,6 +61,7 @@ func main() {
 			DB: db,
 		},
 		templateCache: templateCache,
+		formDecoder:   formDecoder,
 	}
 
 	// server start
