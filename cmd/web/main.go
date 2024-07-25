@@ -4,12 +4,15 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"log/slog"
 	"net/http"
 	"os"
 	"snippetbox.dripto.org/internal/models"
+	"time"
 )
 
 type Config struct {
@@ -54,14 +57,23 @@ func main() {
 	// Initialize a decoder instance...
 	formDecoder := form.NewDecoder()
 
+	// Use the scs.New() function to initialize a new session manager. Then we
+	// configure it to use our MySQL database as the session store, and set a
+	// lifetime of 12 hours (so that sessions automatically expire 12 hours
+	// after first being created).
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
+
 	// common config
 	application := &Application{
 		logger: logger,
 		snippets: &models.SnippetModel{
 			DB: db,
 		},
-		templateCache: templateCache,
-		formDecoder:   formDecoder,
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
 	}
 
 	// server start

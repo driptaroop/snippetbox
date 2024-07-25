@@ -47,6 +47,8 @@ func (app Application) render(w http.ResponseWriter, r *http.Request, status int
 func (app Application) newTemplateData(r *http.Request) templateData {
 	return templateData{
 		CurrentYear: time.Now().Year(),
+		// Add the flash message to the template data, if one exists.
+		Flash: app.sessionManager.PopString(r.Context(), "flash"),
 	}
 }
 
