@@ -1,1 +1,2 @@
 .devcontainer/all-ca-certs.crt
+*.pem
